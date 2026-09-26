@@ -338,7 +338,7 @@ function fallbackExecCopy(text, msg) {
               startSoloGame(questions);
             }
           } catch(e) {
-            showToast('Oda oluşturulamadı.');
+            showToast('1v1 düello çok oyunculu sunucu gerektirir — üretim sürümünü deneyin.');
           }
         }
 
@@ -358,7 +358,7 @@ function fallbackExecCopy(text, msg) {
               showToast('Oda bulunamadı veya süre aşımına uğradı.');
             }
           } catch(e) {
-            showToast('Odaya bağlanılamadı.');
+            showToast('1v1 düello çok oyunculu sunucu gerektirir — üretim sürümünü deneyin.');
           }
         }
 
@@ -434,7 +434,7 @@ function fallbackExecCopy(text, msg) {
 
         function copyRoomLink() {
           const code = document.getElementById('display-room-code').innerText;
-          const url = window.location.origin + '/app/kultur-arena?room=' + code;
+          const url = window.location.origin + window.location.pathname + '?room=' + code;
           navigator.clipboard.writeText(url).then(() => {
             showToast('✓ Düello bağlantısı panoya kopyalandı!');
           });
@@ -548,11 +548,14 @@ function fallbackExecCopy(text, msg) {
                 <td class="py-3 text-right pr-2 font-mono font-bold text-yellow-400">${user.xp.toLocaleString('tr-TR')} XP</td>
               </tr>
             `).join('');
-          } catch(e) {}
+          } catch(e) {
+            // Standalone: backend yok — zarif düşüş notu
+            tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-mistral-stone text-xs">Liderlik tablosu çok oyunculu sunucuda tutulur — <a href="https://app.melihkarasu.com/app/kultur-arena" target="_blank" rel="noopener" class="underline text-mistral-orange">üretim sürümünü</a> ziyaret edin.</td></tr>';
+          }
         }
 
         // 8. Profil & Storage Yönetimi
-        const STORAGE_KEY = 'vibe_arena_stats';
+        const STORAGE_KEY = 'arena_stats_v1';
 
         function loadPlayerStats() {
           try {
@@ -568,18 +571,16 @@ function fallbackExecCopy(text, msg) {
         }
 
         function getPlayerName() {
-          if (window.__vibe_user) {
-            const m = window.__vibe_user.user_metadata || {};
-            return m.full_name || m.name || m.user_name || window.__vibe_user.email || 'Oyuncu';
-          }
-          return 'Melih Karasu';
+          try {
+            const saved = localStorage.getItem('arena_player_name');
+            if (saved && saved.trim()) return saved.trim();
+          } catch(e) {}
+          return 'Oyuncu';
         }
 
         function getPlayerAvatar() {
-          if (window.__vibe_user && window.__vibe_user.user_metadata) {
-            return window.__vibe_user.user_metadata.avatar_url || '';
-          }
-          return 'https://avatars.githubusercontent.com/u/144457496?v=4';
+          const name = getPlayerName();
+          return 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name || 'player');
         }
 
         function updateProfileBadge() {
